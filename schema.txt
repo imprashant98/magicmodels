@@ -1,0 +1,14 @@
+Model: Author
+- name (string)
+- email (string)
+- uuid (string)
+
+Model: Book
+- title (string)
+- authors (list[Author])
+- published_date (datetime)
+
+Model: Review
+- content (text)
+- rating (int)
+- book (Book)

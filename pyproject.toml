@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "python-magicmodels"
+version = "0.1.0"
+description = "A CLI tool to generate production-ready Django and FastAPI projects from a simple schema."
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+dependencies = [
+    # No external dependencies strictly required for the CLI logic itself
+]
+
+[project.scripts]
+magicmodels = "magicmodels.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["magicmodels*"]

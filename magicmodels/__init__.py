@@ -1,0 +1,1 @@
+# magicmodels package

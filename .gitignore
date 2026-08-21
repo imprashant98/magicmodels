@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# MagicModels Test Outputs & Custom Venvs
+test_django/
+test_fastapi/
+my_django_api/
+my_fastapi_project/
+venv_pypi/

@@ -2,7 +2,7 @@ import argparse
 import sys
 import os
 from .parser import Parser, SchemaSyntaxError
-from .normalizer import Normalizer
+from .normalizer import Normalizer, NormalizationChecker
 from .generators.django import DjangoGenerator
 from .generators.fastapi import FastAPIGenerator
 
@@ -31,6 +31,14 @@ def main():
     
     normalizer = Normalizer()
     models = normalizer.normalize(models)
+    
+    checker = NormalizationChecker()
+    warnings = checker.check(models)
+    if warnings:
+        print("\n⚠️  Normalization Warnings:")
+        for w in warnings:
+            print(f"  - {w}")
+        print("\nContinuing with generation anyway...\n")
     
     if args.framework == "django":
         generator = DjangoGenerator()

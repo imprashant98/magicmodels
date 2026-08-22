@@ -1,14 +1,70 @@
-Model: Author
-- name (string)
-- email (string)
-- uuid (string)
+# ==============================================================================
+# MAGICMODELS SCHEMA DEFINITION FILE
+# ==============================================================================
+# This file defines the database schema used to generate your project.
+# The magicmodels parser reads this file to build your FastAPI/Django apps.
+# 
+# SYNTAX RULES:
+# 1. MODELS:
+#    Define a new model starting with 'Model: <ModelName>'.
+#    Model names should be PascalCase (e.g., UserProfile).
+#
+# 2. FIELDS:
+#    Define fields under a model using one of these formats:
+#    - <field_name> (<type>)
+#    - <field_name>: <type>
+#
+# 3. AVAILABLE TYPES:
+#    - string   : Short text (mapped to VARCHAR)
+#    - text     : Long text
+#    - int      : Integer numbers
+#    - boolean  : True/False
+#    - datetime : Dates and times
+#
+# 4. RELATIONSHIPS:
+#    - Foreign Key : Use the exact Name of another Model as the type.
+#                    Example: - author (User)
+#    - ManyToMany  : Use list[ModelName].
+#                    Example: - tags (list[Tag])
+#    *NOTE: Ensure the referenced model is defined somewhere in this file!
+#
+# 5. MODIFIERS:
+#    Append modifiers to the end of a field definition:
+#    - [pk]      : Explicitly marks the field as Primary Key.
+#                  (By default, an 'id' field is auto-generated if missing)
+#    - [indexed] : Adds a database index for faster searches.
+#
+# 6. COMMENTS:
+#    Any unrecognized text or lines starting with '#' will be ignored.
+#
+# ==============================================================================
+# EXAMPLE:
+#
+# Model: User
+# - id (int) [pk]
+# - username (string) [indexed]
+# - email: string [indexed]
+# - is_active (boolean)
+# - posts (list[Post])
+#
+# Model: Post
+# - id (int) [pk]
+# - title: string [indexed]
+# - content: text
+# - author: User
+# ==============================================================================
 
-Model: Book
+Add your magic models below:
+
+Model: User
+- username: string [indexed]
+- email: string
+- created_at: datetime
+- posts: list[Post]
+
+Some conversational plain text!
+
+Model: Post
 - title (string)
-- authors (list[Author])
-- published_date (datetime)
-
-Model: Review
-- content (text)
-- rating (int)
-- book (Book)
+- body (text)
+- author (User)

@@ -41,15 +41,15 @@ class Parser:
                 # E.g., - name (string) [indexed]
                 # E.g., - authors (list[Author])
                 # We expect '- field_name (type)' as mandatory
-                match = re.match(r"-\s*([\w_]+)\s*\(([^)]+)\)", line)
+                match = re.match(r"-\s*([\w_]+)(?:\s*\(([^)]+)\)|\s*:\s*([^\s]+))", line)
                 if not match:
                     raise SchemaSyntaxError(
                         f"Line {line_number}: Invalid field syntax '{line}'. "
-                        "Expected format: - field_name (type) [optional_modifiers]"
+                        "Expected format: - field_name (type) [optional_modifiers] or - field_name: type [optional_modifiers]"
                     )
                     
                 field_name = match.group(1)
-                field_type = match.group(2)
+                field_type = match.group(2) or match.group(3)
                 
                 # Check for modifiers like [pk] or [indexed]
                 modifiers = line[match.end():].strip()
@@ -71,11 +71,8 @@ class Parser:
                 current_model.fields.append(field)
                 
             else:
-                # Unrecognized syntax
-                raise SchemaSyntaxError(
-                    f"Line {line_number}: Unrecognized syntax '{line}'. "
-                    "Lines must be empty, start with '#', 'Model:', or '-'."
-                )
+                # Unrecognized syntax - safely ignored (allows conversational plain text)
+                continue
                 
         if not models:
             raise SchemaSyntaxError("No valid 'Model:' definitions found in the schema file.")

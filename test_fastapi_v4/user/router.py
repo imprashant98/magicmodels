@@ -1,0 +1,107 @@
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlmodel import Session, select, col, desc, asc
+from database import get_session
+from core.security import get_current_user
+from core.schemas import PaginatedResponse
+from .models import User
+from .schemas import UserFilter
+
+router = APIRouter(prefix="/users", tags=["User"])
+
+@router.post("/", response_model=User)
+def create_user(item: User, session: Session = Depends(get_session), current_user: dict = Depends(get_current_user)):
+    session.add(item)
+    session.commit()
+    session.refresh(item)
+    return item
+
+@router.get("/", response_model=PaginatedResponse[User])
+def read_users(
+    filters: UserFilter = Depends(),
+    session: Session = Depends(get_session),
+    page: Optional[int] = Query(None, ge=1),
+    size: Optional[int] = Query(None, ge=1, le=100),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
+    sort_by: Optional[str] = None,
+    order: Optional[str] = "asc"
+):
+    query = select(User)
+    
+    filter_dict = filters.dict(exclude_none=True)
+    for key, value in filter_dict.items():
+        if "__" in key:
+            field, op = key.split("__")
+            column = getattr(User, field)
+            if op == "contains":
+                query = query.where(col(column).contains(value))
+            elif op == "ilike":
+                query = query.where(col(column).ilike(f"%{value}%"))
+            elif op == "gt":
+                query = query.where(column > value)
+            elif op == "lt":
+                query = query.where(column < value)
+        else:
+            query = query.where(getattr(User, key) == value)
+            
+    if sort_by and hasattr(User, sort_by):
+        column = getattr(User, sort_by)
+        if order == "desc":
+            query = query.order_by(desc(column))
+        else:
+            query = query.order_by(asc(column))
+            
+    total = len(session.exec(query).all())
+    
+    # Dual Pagination Logic
+    actual_skip = skip
+    actual_limit = limit
+    if page is not None and size is not None:
+        actual_limit = size
+        actual_skip = (page - 1) * size
+    elif page is not None:
+        actual_skip = (page - 1) * limit
+    elif size is not None:
+        actual_limit = size
+
+    query = query.offset(actual_skip).limit(actual_limit)
+    items = session.exec(query).all()
+    
+    return {
+        "total": total,
+        "skip": actual_skip,
+        "limit": actual_limit,
+        "page": page,
+        "size": size,
+        "items": items
+    }
+
+@router.get("/{item_id}", response_model=User)
+def read_user(item_id: int, session: Session = Depends(get_session)):
+    item = session.get(User, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="User not found")
+    return item
+
+@router.patch("/{item_id}", response_model=User)
+def update_user(item_id: int, item_data: User, session: Session = Depends(get_session), current_user: dict = Depends(get_current_user)):
+    item = session.get(User, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="User not found")
+    update_data = item_data.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(item, key, value)
+    session.add(item)
+    session.commit()
+    session.refresh(item)
+    return item
+
+@router.delete("/{item_id}")
+def delete_user(item_id: int, session: Session = Depends(get_session), current_user: dict = Depends(get_current_user)):
+    item = session.get(User, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="User not found")
+    session.delete(item)
+    session.commit()
+    return {"ok": True}
